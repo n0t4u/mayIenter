@@ -16,7 +16,9 @@ import argparse
 from termcolor import colored
 import logging
 import os
+import re
 import requests
+from terminaltables import SingleTable
 import sys
 import time
 import urllib3
@@ -26,17 +28,25 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 users={}
 pathsFile=""
 results=[]
+overall=[]
 
 status={
-	"200":"green",
-	"202":"green",
-	"301":"yellow",
-	"302":"yellow",
-	"401":"red",
-	"403":"red",
-	"404":"yellow",
-	"500":"red",
-	"ERROR":"red"
+	"200":"green", #OK
+	"201":"green", #Created
+	"202":"green", #Accepetd
+	"301":"yellow", #Moved Permanently
+	"302":"yellow", #Found
+	"303":"yellow", #See other
+	"304":"green", #Not modified
+	"400":"red", #Bad Request
+	"401":"red", #Unathorized
+	"403":"red", #Forbidden
+	"404":"yellow", #Not found
+	"500":"red", #Internal Server Error
+	"502":"red", #Bad Gateway
+	"503":"red", #Service Unavailable
+	"504":"red", #Gateway Timeout
+	"ERROR":"red" #Error
 }
 #Functions
 
@@ -64,6 +74,7 @@ def getRequest(route,cookie):
 	else:
 		return str(response.status_code)
 
+#Insert and parse user adn cookie data in the command line
 def argumentsData():
 	global pathsFile
 	logging.info(args.data[0])
@@ -95,6 +106,7 @@ def argumentsData():
 		print(colored("[!] Unable to find the file %s" %args.file[0],"red"))
 	return
 
+#Insert and parse user an cookie data in an interactive propmt
 def interactiveData():
 	global pathsFile
 	print("Introduce username and session cookies.\nIf you do not want to add more, leave the name empty.")
@@ -132,6 +144,31 @@ def interactiveData():
 		#CTRL+C
 		sys.exit(0)
 
+#Calculates and print overall results in a table
+def overalltable():
+	usernames = list(users.keys())
+	print(usernames[0])
+	overall.append(["","20x","30x","40x,50x","Errors","Total"])
+	for i in range(len(results[0][1])):
+		print("i", i)
+		res_20x= 0
+		res_30x= 0
+		res_40x50x= 0
+		res_err= 0
+		for j in range(len(results)):
+			#print(results[j][1][i])
+			if re.search(r'^20[\d]{1}',str(results[j][1][i])):
+				res_20x+=1
+			elif re.search(r'^30[\d]{1}',str(results[j][1][i])):
+				res_30x+=1
+			elif re.search(r'^[45]{1}0[\d]{1}',str(results[j][1][i])):
+				res_40x50x+=1
+			else:
+				res_err+=1
+		overall.append([usernames[i],res_20x,res_30x,res_40x50x,res_err,res_20x+res_30x+res_40x50x+res_err])
+		#print([usernames[i],res_20x,res_30x,res_err])
+	table =SingleTable(overall,title=colored("Overall","cyan"))
+	print(table.table)
 
 #Argument Parser
 parser= argparse.ArgumentParser(description="Authomatic tool to determine authorization privileges between several users.")
@@ -191,6 +228,7 @@ if __name__ == '__main__':
 	except Exception as e:
 		print(e)
 	finally:
+		overalltable()
 		with open("mayIenter_results.txt","w+",encoding="iso-8859-1") as file:
 			for res in results:
 				resStatus =",".join(res[1])
