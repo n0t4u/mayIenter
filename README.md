@@ -13,7 +13,7 @@ $ python3 -m pip install -r requirements.txt
 $ chmod +x mayIenter.py
 ```
 ## Usage
-Use the tool DRAFMe.py, or another spider, to crawl all the routes of the domain you are auditing.
+Use the tool [DRAFMe.py](https://github.com/n0t4u/DRAFMe), or another spider, to crawl all the routes of the domain you are auditing.
 Export the results in a file and filter them by the domain you want to check (grep "example.com").
 Run mayIenter.
 
@@ -25,7 +25,7 @@ $ python3 mayIenter.py -d "User1:Cookie1,User2:Cookie2" -f "path/to/file" #Comma
 
 ## TO DO
 Add Auth header support
-Add comparative table
+Support undefined number of users, not just 2 + anon
 
 ## Author 
 n0t4u
