@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-#Version 0.8.3
+#Version 0.8.4
 
 #TODO
 """
 Add Auth header support
 
-Check if similar cookie
+Support several users, not just two + anon
 
 """
 
@@ -68,7 +68,7 @@ def argumentsData():
 	global pathsFile
 	logging.info(args.data[0])
 	for data in args.data[0].split(","):
-		logging.info(colored("[*]","blue")+" Data %s" %data)
+		#logging.info(colored("[*]","blue")+" Data %s" %data)
 		#user,cookie = data.split(':')
 		#users[user].append[cookie]
 		try:
@@ -77,7 +77,15 @@ def argumentsData():
 		except:
 			print(colored("[!] User %s has no cookie assigned. Use ':' to separate user and cookie" %data,"red"))
 		else:
-			users[user]= cookie
+			if not user in users and cookie not in users.values():
+				if user == "Anonymous":
+					print(colored("[!] 'Anonymous' user is reserved and automatically added to the tests.","red"))
+					sys.exit(0)
+				else:
+					users[user]= cookie
+			else:
+				print(colored("[!] Users and cookies must be unique.","red"))
+				sys.exit(0)
 	logging.info(args.file[0])
 	if os.path.isfile(args.file[0]):
 		pathsFile= args.file[0]
@@ -94,14 +102,22 @@ def interactiveData():
 		n = 0 
 		while n < 2:
 			user= str(input(colored("[»] Username: ","cyan"))).strip(" ")
-			if user and user != "Anonymous":
-				cookie= str(input(colored("[»] Cookie: ","cyan"))).strip(" ")
-				try:
-					users[user]= cookie
-					print(colored("[+] User %s with cookie %s sucessfully imported" %(user,cookie),"green"))
-					n+=1
-				except Exception as e:
-					logging.info(colored("[!] %s" %e,"red"))
+			if user:
+				if user == "Anonymous":
+					print(colored("[!] 'Anonymous' user is reserved and automatically added to the tests.","red"))
+				else:
+					cookie= str(input(colored("[»] Cookie: ","cyan"))).strip(" ")
+					try:
+						if not user in users and cookie not in users.values():
+							users[user]= cookie
+							print(colored("[+] User %s with cookie %s sucessfully imported." %(user,cookie),"green"))
+							n+=1
+						else:
+							print(colored("[!] Users and cookies must be unique.","red"))
+						
+
+					except Exception as e:
+						logging.info(colored("[!] %s" %e,"red"))
 			else:
 				n = 2
 		print("Introduce the file with the paths to be tested.")
