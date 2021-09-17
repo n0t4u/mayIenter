@@ -1,14 +1,13 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-#Version 0.8.4
+#Version 0.9.0
 
 #TODO
 """
 Add Auth header support
-
-Support several users, not just two + anon
-
+Add timeout option
+Add URL length display option
 """
 
 #Imports
@@ -143,14 +142,14 @@ def interactiveData():
 	except KeyboardInterrupt:
 		#CTRL+C
 		sys.exit(0)
+	else:
+		return
 
 #Calculates and print overall results in a table
 def overalltable():
 	usernames = list(users.keys())
-	print(usernames[0])
 	overall.append(["","20x","30x","40x,50x","Errors","Total"])
 	for i in range(len(results[0][1])):
-		print("i", i)
 		res_20x= 0
 		res_30x= 0
 		res_40x50x= 0
@@ -166,9 +165,10 @@ def overalltable():
 			else:
 				res_err+=1
 		overall.append([usernames[i],res_20x,res_30x,res_40x50x,res_err,res_20x+res_30x+res_40x50x+res_err])
-		#print([usernames[i],res_20x,res_30x,res_err])
 	table =SingleTable(overall,title=colored("Overall","cyan"))
+	print("\n")
 	print(table.table)
+	return
 
 #Argument Parser
 parser= argparse.ArgumentParser(description="Authomatic tool to determine authorization privileges between several users.")
@@ -184,7 +184,7 @@ args = parser.parse_args()
 #Main
 if __name__ == '__main__':
 	startTime = time.time()
-	#header()
+	header()
 	if args.verbose:
 		logging.basicConfig(level=logging.INFO)
 	#logging.info(colored("[*] %s" %args.url[0],"green"))
@@ -196,9 +196,11 @@ if __name__ == '__main__':
 	users["Anonymous"]=""
 	logging.info(users)
 	logging.info("File %s" %pathsFile)
-	keys = list(users.keys())
-	tableHeader = "Route".ljust(50," ")+str(keys[0]).center(13," ")+str(keys[1]).center(12," ")+str(keys[2]).center(12," ")
-	print(colored(tableHeader,"blue")) #16 --> 24,25,25
+	#keys = list(users.keys())
+	#tableHeader = "Route".ljust(50," ")+str(keys[0]).center(13," ")+str(keys[1]).center(12," ")+str(keys[2]).center(12," ")
+	usersHeader= " ".center(8," ").join(list(users.keys()))
+	print(colored("Route".ljust(52," "),"cyan"),colored(usersHeader,"cyan"))
+	#print(colored(tableHeader,"blue")) #16 --> 24,25,25
 	#print(aux.ljust(35," "),colored(hasKey,'red'))
 	try:
 
@@ -214,13 +216,10 @@ if __name__ == '__main__':
 					col1 =url
 				else:
 					col1 =url[0:15]+"..."+url[-31:]
-				col2 = colored(statusCodes[0],status[statusCodes[0]])
-				col3 = colored(statusCodes[1],status[statusCodes[1]])
-				col4 = colored(statusCodes[2],status[statusCodes[2]])
-				print(col1.ljust(50," "),col2.center(20," "),col3.center(20," "),col4.center(20," "))
-				#print(line.rsplit("/",1).strip("\n"),statusCodes)
+				codes ="".center(6," ").join(colored(str(element),status[element]) for element in statusCodes)
+				print(col1.ljust(52," "),sep="",end="")
+				print(codes)
 				res = [line.strip("\n"),statusCodes]
-				#print(res)
 				results.append(res)
 	except KeyboardInterrupt:
 		#CTRL+C
@@ -229,7 +228,8 @@ if __name__ == '__main__':
 		print(e)
 	finally:
 		overalltable()
-		with open("mayIenter_results.txt","w+",encoding="iso-8859-1") as file:
+		with open("mayIenter_results.csv","w+",encoding="iso-8859-1") as file:
+			file.write("Route,"+",".join(list(users.keys()))+"\n")
 			for res in results:
 				resStatus =",".join(res[1])
 				#resStatus =",".join([str(s) for s in res[1]])

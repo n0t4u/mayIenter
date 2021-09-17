@@ -25,7 +25,8 @@ $ python3 mayIenter.py -d "User1:Cookie1,User2:Cookie2" -f "path/to/file" #Comma
 
 ## TO DO
 Add Auth header support
-Support undefined number of users, not just 2 + anon
+Add timeout option
+Add URL length display option
 
 ## Author 
 n0t4u
