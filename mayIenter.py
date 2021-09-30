@@ -1,13 +1,12 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-#Version 0.9.0
+#Version 1.0.0
 
 #TODO
 """
-Add Auth header support
-Add timeout option
 Add URL length display option
+Add just one URL check
 """
 
 #Imports
@@ -63,21 +62,21 @@ def header():
 	""")
 
 #Performs a get Request to a route with the given cookies
-def getRequest(route,cookie):
-	logging.info("Route: %s\nCookie: %s" %(route,cookie))
+def getRequest(route,header):
+	logging.info("Route: %s\nCookie: %s" %(route,header))
 	try:
-		response = requests.get(route, headers={"Cookie":cookie}, allow_redirects=False,timeout=10, verify=False)
+		response = requests.get(route, headers=header, allow_redirects=False,timeout=args.timeout, verify=False)
 	except Exception as e:
 		logging.info(e)
 		return "ERROR"
 	else:
 		return str(response.status_code)
 
-#Insert and parse user adn cookie data in the command line
-def argumentsData():
+#Insert and parse user and cookie data in the command line
+def cookieArguments():
 	global pathsFile
-	logging.info(args.data[0])
-	for data in args.data[0].split(","):
+	logging.info(args.cookie[0])
+	for data in args.cookie[0].split(","):
 		#logging.info(colored("[*]","blue")+" Data %s" %data)
 		#user,cookie = data.split(':')
 		#users[user].append[cookie]
@@ -95,6 +94,38 @@ def argumentsData():
 					users[user]= cookie
 			else:
 				print(colored("[!] Users and cookies must be unique.","red"))
+				sys.exit(0)
+	logging.info(args.file[0])
+	if os.path.isfile(args.file[0]):
+		pathsFile= args.file[0]
+	elif os.path.isfile(os.getcwd()+"/"+args.file[0]):
+		pathsFile= os.getcwd()+"/"+args.file[0]
+	else:
+		print(colored("[!] Unable to find the file %s" %args.file[0],"red"))
+	return
+
+#Insert and parse user and authorization header data in the command line
+def authorizationArguments():
+	global pathsFile
+	logging.info(args.auth[0])
+	for data in args.auth[0].split(","):
+		#logging.info(colored("[*]","blue")+" Data %s" %data)
+		#user,cookie = data.split(':')
+		#users[user].append[cookie]
+		try:
+			user,auth = data.split(":")
+			logging.info(colored("[*]","blue")+" User %s, Authorization %s" %(user,auth))
+		except:
+			print(colored("[!] User %s has no Authorization token assigned. Use ':' to separate user and token" %data,"red"))
+		else:
+			if not user in users and auth not in users.values():
+				if user == "Anonymous":
+					print(colored("[!] 'Anonymous' user is reserved and automatically added to the tests.","red"))
+					sys.exit(0)
+				else:
+					users[user]= auth
+			else:
+				print(colored("[!] Users and Authorization tokens must be unique.","red"))
 				sys.exit(0)
 	logging.info(args.file[0])
 	if os.path.isfile(args.file[0]):
@@ -174,9 +205,12 @@ def overalltable():
 parser= argparse.ArgumentParser(description="Authomatic tool to determine authorization privileges between several users.")
 
 #parser.add_argument("url",help="URL to crawl and check authorization", nargs=1)
-parser.add_argument("-d","--data",dest="data",help="Data in dictionary format. Example: 'Admin:CookieAdmin,User:CookieUser'",nargs=1)
+datagroup= parser.add_mutually_exclusive_group()
+datagroup.add_argument("-c","--cookie",dest="cookie",help="Session cookies in dictionary format. Example: 'Admin:CookieAdmin,User:CookieUser'",nargs=1)
+datagroup.add_argument("-a","--auth",dest="auth",help="Authorization tokens in dictionary format. Example: 'Admin:AuthAdmin,User:AuthUser'", nargs=1)
 parser.add_argument("-f","--file",dest="file",help="File with routes to check.",nargs=1)
-parser.add_argument("-v","--verbose",dest="verbose", help="Muestra por pantalla tramas de la ejecución.", action="store_true")
+parser.add_argument("-t","--timeout",dest="timeout",help="Define connection timeout for slow networks or servers. Default value 5 secs.", type=int,default=5)
+parser.add_argument("-v","--verbose",dest="verbose", help="Enable verbose mode.", action="store_true")
 
 args = parser.parse_args()
 
@@ -188,8 +222,10 @@ if __name__ == '__main__':
 	if args.verbose:
 		logging.basicConfig(level=logging.INFO)
 	#logging.info(colored("[*] %s" %args.url[0],"green"))
-	if args.data and args.file:
-		argumentsData()
+	if args.cookie and args.file:
+		cookieArguments()
+	elif args.auth and args.file:
+		authorizationArguments()
 	else:
 		interactiveData()
 
@@ -208,8 +244,12 @@ if __name__ == '__main__':
 			for line in file:
 				#logging.info(line)
 				statusCodes=[]
-				for user,cookie in users.items():
-					statusCodes.append(getRequest(route=line.strip("\n"),cookie=cookie.strip("\n")))
+				for user,auth in users.items():
+					if args.auth:
+						header={"Authorization":auth.strip("\n")}
+					else:
+						header={"Cookie":auth.strip("\n")}
+					statusCodes.append(getRequest(route=line.strip("\n"),header=header))
 				url = line.lstrip("https://").rstrip("\n")
 				#print(url[0:15]+"..."+url[-21:-1])
 				if len(url)<51:

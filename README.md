@@ -2,8 +2,6 @@
 
 May I enter is an automatic tool written in Python 3 that performs authorization checks based on user cookies or authorization headers.
 
-### ¡Still in development!
-
 ## Installation
 Simple installation, simple usage
 ```sh
@@ -18,15 +16,20 @@ Export the results in a file and filter them by the domain you want to check (gr
 Run mayIenter.
 
 ```sh
-$ python3 mayIenter.py #Interative menu
+$ python3 mayIenter.py #Interative menu. Only Cookie support
 
-$ python3 mayIenter.py -d "User1:Cookie1,User2:Cookie2" -f "path/to/file" #Command line
+$ python3 mayIenter.py -c "User1:Cookie1,User2:Cookie2" -f "path/to/file" #Command line
+
+$ python3 mayIenter.py -a "User1:Auth1,User2:Auth2" -f "path/to/file" #Command line
 ```
 
+##Options
+* -t/--timeout --> Define connection timeout for slow networks or servers. Default value 5 secs.
+* -v/--verbose --> Enable verbose mode.
+
 ## TO DO
-Add Auth header support
-Add timeout option
 Add URL length display option
+Add one url check
 
 ## Author 
 n0t4u
